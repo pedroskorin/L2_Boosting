@@ -104,7 +104,7 @@ print(choosed_predictors)
 
 # Hudson, ficamos com dúvidas com a relação M x MSE
 # Intuitivamente, parece fazer sentido que quanto mais interações, mais específico fica o modelo
-# E menor o MSE, entretanto, como visto abaixo, o MSE parece aumentar
+# E menor o MSE, entretanto, como visto no gráfico, o MSE parece aumentar
 # Não sabemos se isso se deve ao fato de que algo está errado no algorítimo nosso
 # Ou é uma característica normal do modelo
 
