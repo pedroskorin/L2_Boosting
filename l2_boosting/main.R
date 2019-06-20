@@ -95,3 +95,15 @@ f_optimum = mean(Y) + ft
 # MSE of L2_boost
 print(sum((f_optimum - Y)^2)/nrow(X))
 }
+
+
+teste = c()
+for (i in seq(1,400,2)) {
+  a = Sys.time()
+  print(i)
+  l = L2_boost(Y,X,i)
+  teste = c(teste, l)
+  print(Sys.time() - a)
+}
+
+plot(seq(1,400,2), teste, type = "l")
