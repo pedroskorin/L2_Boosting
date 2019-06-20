@@ -102,9 +102,9 @@ print(sum((f_optimum - Y)^2)/nrow(X))
 print(choosed_predictors)
 }
 
-# Hudson, ficamos com d?vidas com a rela??o M x MSE
-# Intuitivamente, parece fazer sentido que quanto mais intera??es, mais espec?fico fica o modelo
-# E menor o MSE, entretanto, como visto no gr?fico, o MSE parece aumentar
-# N?o sabemos se isso se deve ao fato de que algo est? errado no algor?timo nosso
-# Ou ? uma caracter?stica normal do modelo
+# Hudson, ficamos com dúvidas com a relação M x MSE
+# Intuitivamente, parece fazer sentido que quanto mais interações, mais específico fica o modelo
+# E menor o MSE, entretanto, como visto no gráfico, o MSE parece aumentar
+# Não sabemos se isso se deve ao fato de que algo está errado no algoritmo nosso
+# Ou se é uma característica normal do modelo
 
