@@ -20,7 +20,7 @@ X = data[,-ncol(data)] # Predictors variables
 
 # Creating function L2_boost:
 # INPUT: Y - response ; X - predictors ; M - Iterations ; v - shrinkage parameter (standart 0.1)
-# OUTPUT : MSE of algorithm
+# OUTPUT : MSE of algorithm ; times each predictor was choosed
 
 L2_boost = function(Y,X,M,v=0.1){
 
@@ -44,8 +44,10 @@ X_optimum = c() # Vector of selected predictor
 Matrix = c() # Matrix of all selected predictors*coefficient*v
 f_optimum = c() # final prediction vector
 
+choosed_predictors = rep(0,ncol(X)) # controling choosed predictors
+names(choosed_predictors) = names(X)
 
-while (m <= M) { # Iterate M times
+while (m < M) { # Iterate M times
 u = Y - ft # Calculating error in m
 
 # calculating optimum coefficients
@@ -76,6 +78,8 @@ X_optimum = X[,index]
 # Calculating g (vector of selected predictor * optimum coefficient)
 g = teta[index]*X_optimum
 
+choosed_predictors[index] = choosed_predictors[index] + 1
+
 # Updating ft
 ft = ft + v*g
 
@@ -94,4 +98,13 @@ f_optimum = mean(Y) + ft
 
 # MSE of L2_boost
 print(sum((f_optimum - Y)^2)/nrow(X))
+
+print(choosed_predictors)
 }
+
+# Hudson, ficamos com dúvidas com a relação M x MSE
+# Intuitivamente, parece fazer sentido que quanto mais interações, mais específico fica o modelo
+# E menor o MSE, entretanto, como visto abaixo, o MSE parece aumentar
+# Não sabemos se isso se deve ao fato de que algo está errado no algorítimo nosso
+# Ou é uma característica normal do modelo
+
