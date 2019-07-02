@@ -102,6 +102,9 @@ print(sum((f_optimum - Y)^2)/nrow(X))
 print(choosed_predictors)
 }
 
+#Example
+L2_boost(Y,X,20)
+
 # Hudson, ficamos com dúvidas com a relação M x MSE
 # Intuitivamente, parece fazer sentido que quanto mais interações, mais específico fica o modelo
 # E menor o MSE, entretanto, como visto no gráfico, o MSE parece aumentar
