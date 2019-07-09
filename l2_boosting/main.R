@@ -54,7 +54,7 @@ u = Y - ft # Calculating error in m
 teta = c()
 
 for (i in X){
-  b = solve(t(i)%*%i)%*%t(i)%*%Y
+  b = solve(t(i)%*%i)%*%t(i)%*%u
   
   teta = c(teta, b)
 }
@@ -94,16 +94,33 @@ g_optimum[[m]] <- g
 Matrix = do.call(cbind, g_optimum)
 
 # Final function
-f_optimum = mean(Y) + ft
+f_optimum = ft
 
 # MSE of L2_boost
-print(sum((f_optimum - Y)^2)/nrow(X))
+return(sum((f_optimum - Y)^2)/nrow(X))
 
-print(choosed_predictors)
+#print(choosed_predictors)
 }
 
 #Example
 L2_boost(Y,X,20)
+
+print_L2_boost = function(start, end, by = 1, Y_in = Y, X_in = X) {
+  
+  m_vector = c()
+  
+  for (i in seq(start, end, by)) {
+    m_vector_in = L2_boost(Y_in,X_in,i)
+    
+    m_vector = c(m_vector, m_vector_in)
+  }
+  
+  plot(seq(start, end, by), m_vector, type = "l")
+}
+
+# Example
+
+print_L2_boost(0,500,25)
 
 # Hudson, ficamos com dúvidas com a relação M x MSE
 # Intuitivamente, parece fazer sentido que quanto mais interações, mais específico fica o modelo
