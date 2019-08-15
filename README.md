@@ -1,6 +1,6 @@
 # L2_Boosting
 
-UFRGS Statistics Department Project
+## UFRGS Statistics Department Project
 
 Professor: Hudson da Silva Torrent
 
