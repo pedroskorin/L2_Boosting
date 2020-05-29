@@ -18,11 +18,10 @@ Y = data$Y # Response variable
 
 X = data[,-ncol(data)] # Predictors variables
 
-# Creating function L2_boost:
-# INPUT: Y - response ; X - predictors ; M - Iterations ; v - shrinkage parameter (standart 0.1)
-# OUTPUT : MSE of algorithm ; times each predictor was choosed
+# Getting functions
+# Module for L2 functions
 
-L2_boost = function(Y, X, M, v=0.1, AICc = F){
+Fitting = function(Y, X, M, v, AICc){
   
   # Defining variables
   ft = mean(Y) # First appearence of function ft
@@ -37,7 +36,7 @@ L2_boost = function(Y, X, M, v=0.1, AICc = F){
   SSR = c() # list of all SSR
   
   g = c() # vector of selected predictor * optimum coefficient
-  coef_optimum = list() # list of all g's
+  coef_control = list() # list of all g's
   index = 0 # index of selected predictor in teta's vector
   
   X_optimum = c() # Vector of selected predictor
@@ -45,8 +44,9 @@ L2_boost = function(Y, X, M, v=0.1, AICc = F){
   f_optimum = c() # final prediction vector
   
   choosed_predictors = rep(0,ncol(X)) # controlling choosed predictors
-  coef_opt = rep(0,ncol(X))
-  names(choosed_predictors) = names(coef_opt) = names(X)
+  names(choosed_predictors) = names(X)
+  
+  coefficient_control = rep(0,ncol(X))
   
   while (m < M) { # Iterate M times
     u = Y - ft # Calculating error in m
@@ -55,9 +55,11 @@ L2_boost = function(Y, X, M, v=0.1, AICc = F){
     teta = c()
     
     for (i in X){
+      
       b = solve(t(i)%*%i)%*%t(i)%*%u
       
       teta = c(teta, b)
+      
     }
     
     # calculating SSR
@@ -78,9 +80,9 @@ L2_boost = function(Y, X, M, v=0.1, AICc = F){
     
     # Calculating g (vector of selected predictor * optimum coefficient)
     g = teta[index]*X_optimum
+    coefficient_control[index] = coefficient_control[index] + teta[index]
     
     choosed_predictors[index] = choosed_predictors[index] + 1
-    coef_opt[index] = coef_opt[index] + teta[index]
     
     # Updating ft
     ft = ft + v*g
@@ -88,12 +90,12 @@ L2_boost = function(Y, X, M, v=0.1, AICc = F){
     # Iterating
     m = m + 1
     
-    coef_optimum[[m]] <- coef_opt
+    coef_control[[m]] <- coefficient_control
     
   }
   
-  # Matrix of all coef vectors
-  Matrix = do.call(rbind, coef_optimum)
+  # Matrix of all coefficients vectors
+  Matrix_coef = do.call(rbind, coef_control)
   
   # Final function
   f_optimum = ft
@@ -110,35 +112,99 @@ L2_boost = function(Y, X, M, v=0.1, AICc = F){
   # AICc
   
   if (AICc) {
-   
+    
     AICC = AIC + ((2*k)^(2) + 2*k)/(length(Y) - k - 1)
     
-    final_vector = c(MSE, AICC)
-    names(final_vector) = c("MSE", "IC") 
+    specific_IC = AICC
     
   } else {
     
-    final_vector = c(MSE, AIC)
-    names(final_vector) = c("MSE", "IC") 
+    specific_IC = AIC
     
   }
   
-  #return(ft)
-  #print(choosed_predictors)
-  
+  final_vector = list(MSE, specific_IC, Matrix_coef, ft, Y-ft)
   return(final_vector)
 }
 
-#Example
-L2_boost(Y, X, 9, AICc = F)
+L2_min = function(Y, X, v, AICc){
+  
+  x = Fitting(Y, X, 2, v , AICc)[[2]]
+  IC = c(Fitting(Y, X, 1, v, AICc)[[2]], x)
+  i = 3
+  
+  while(IC[length(IC)-1] > x) {
+    
+    x = Fitting(Y, X, i, v, AICc)[[2]]
+    
+    IC = c(IC, x)
+    
+    i = i + 1
+    
+  }
+  
+  return(i-1)
+}
+
+L2_boost = function(Y, X, v, AICc) {
+  
+  # Function for minimizing AIC 
+  
+  # Optimal M
+  m_opt = L2_min(Y, X, v, AICc)
+  
+  # Fitting
+  optimal = Fitting(Y, X, m_opt, v, AICc)
+  
+  coefficients_in = optimal[[3]][nrow(optimal[[3]]),]
+  names(coefficients_in) = names(X)
+  
+  message = function(coef_in = coefficients_in, kylo = optimal) {
+    cat("\n","L2_Boosting", "\n", "\n", "Selected M ","\n")
+    print(m_opt)
+    cat("\n", "AIC:", kylo[[2]])
+    cat("\n", "MSE:",kylo[[1]])
+    cat("\n")
+  }
+  
+  op <- list(coefficients = coefficients_in, fitted = optimal[[4]],
+             residuals = optimal[[5]], IC = optimal[[2]], MSE = optimal[[1]],
+             coef_history = optimal[[3]], a = message)
+  
+  class(op) <- 'L2_boost'
+  
+  op
+  
+}
+
+# Creating function L2_boost:
+# INPUT: Y - response ; X - predictors ; M - Iterations ; v - shrinkage parameter (standart 0.1)
+# OUTPUT : MSE of algorithm ; times each predictor was choosed
+v = 0.1
+AICc = F
+
+b = L2_boost(Y, X, v, AICc)
+
+b$a()
+
+# Function for Historical Coefficients Plotting
+
+coef_hist = function(arg) {
+  
+  matplot(arg$coef_history, type = c("S") ,col = 1:nrow(arg$coef_history), xlab = "Iterations", ylab = "Coefficients")
+}
+
+## Example
+
+coef_hist(b)
 
 # Function for MSE printing
-print_L2_boost = function(start, end, by = 1, Y_in = Y, X_in = X) {
+print_L2_boost = function(start, end, by = 1, Y, X, v, AICc) {
   
   m_vector = c()
   
   for (i in seq(start, end, by)) {
-    m_vector_in = L2_boost(Y_in,X_in,i)[1]
+    m_vector_in = Fitting(Y, X, i, v, AICc)[1]
     
     m_vector = c(m_vector, m_vector_in)
   }
@@ -146,19 +212,18 @@ print_L2_boost = function(start, end, by = 1, Y_in = Y, X_in = X) {
   plot(seq(start, end, by), m_vector, type = "l", xlab = "m", ylab = "MSE")
 }
 
-# Example
-par(mfrow = c(1,2))
+## Example
 
-print_L2_boost(0,250,10)
+print_L2_boost(0, 250, 10, Y, X, v, AICc)
 
 # Function for AIC printing
 
-print_AIC = function(start, end, by = 1, Y_in = Y, X_in = X, AICc = F) {
+print_AIC = function(start, end, by = 1, Y, X, v, AICc) {
   
   m_vector = c()
   
   for (i in seq(start, end, by)) {
-    m_vector_in = L2_boost(Y_in,X_in,i,AICc = AICc)[2]
+    m_vector_in = Fitting(Y, X, i, v, AICc)[2]
     
     m_vector = c(m_vector, m_vector_in)
   }
@@ -166,28 +231,7 @@ print_AIC = function(start, end, by = 1, Y_in = Y, X_in = X, AICc = F) {
   plot(seq(start, end, by), m_vector, type = "l", xlab = "m", ylab = "IC")
 }
 
-# Example
+## Example
 
-print_AIC(0,250,10,AICc = F)
-
-# Function for minimizing AIC 
-L2_min = function(Y_in = Y, X_in=X, ending = (length(Y)/2), AICc = F){
-  
-  IC = c()
-  for(i in 1:ending){
-    x = L2_boost(Y,X,i,AICc = AICc)[2]
-    IC = c(IC, x)
-  }
-    min = unname(which.min(IC))
-    
-    #return(L2_boost(Y,X,M=min))
-    return(min) # return the m* with the smallest AIC
-}
-
-# Example
-L2_min(AICc = F)
-
-# Final Example with selected m
-
-dale = L2_boost(Y,X,L2_min(),AICc = F)
+print_AIC(0, 250, 10, Y, X, v, AICc)
 
