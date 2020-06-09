@@ -11,12 +11,12 @@
 #2019-6-19
 
 # Getting data from github without the first column
-data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados.csv")[,-1]
+data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados_brasil.csv")
 
 # Selecting data
-Y = data$Y # Response variable
+Y = data[,1] # Response variable
 
-X = data[,-ncol(data)] # Predictors variables
+X = data[,3:ncol(data)] # Predictors variables
 
 # Getting functions
 # Module for L2 functions
@@ -135,9 +135,9 @@ Fitting = function(Y, X, M, v, AICc){
   
   B = diag(nrow(X)) - C
   
-  # Calculating sigma squared
+  # Calculating sigma squared_squared
   
-  sigma = nrow(X)^(-1) * sum((Y - ( B %*% Y ))^2)
+  sigma_squared = nrow(X)^(-1) * sum((Y - ( B %*% Y ))^2)
   
   # Calculating trace
   
@@ -145,7 +145,7 @@ Fitting = function(Y, X, M, v, AICc){
   
   # Calculating AIC
   
-  AIC = log(sigma) + (1 + df_m/nrow(X))/(1 - (df_m + 2)/nrow(X))
+  AIC = log(sigma_squared) + (1 + df_m/nrow(X))/(1 - (df_m + 2)/nrow(X))
   
   # AICc
   
@@ -181,7 +181,7 @@ L2_min = function(Y, X, v, AICc){
     
   }
   
-  return(i-1)
+  return(i-2)
 }
 
 L2_boost = function(Y, X, v, AICc) {
@@ -272,5 +272,5 @@ print_AIC = function(start, end, by = 1, Y, X, v, AICc) {
 
 ## Example
 
-print_AIC(1, 500, 50, Y, X, 0.1, F)
+print_AIC(1, 100, 2, Y, X, 0.2, F)
 
