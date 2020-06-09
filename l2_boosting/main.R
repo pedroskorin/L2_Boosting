@@ -25,7 +25,9 @@ Fitting = function(Y, X, M, v, AICc){
   
   # Defining variables
   ft = mean(Y) # First appearence of function ft
-  m = 0 # m index
+  m = 1 # m index
+  
+  #X = cbind(X,rep(1,nrow(X)))
   
   u = 0 # error vector (Y-ft)
   
@@ -48,7 +50,9 @@ Fitting = function(Y, X, M, v, AICc){
   
   coefficient_control = rep(0,ncol(X))
   
-  while (m < M) { # Iterate M times
+  s = c() # vector of choosed predictors
+  
+  while (m <= M) { # Iterate M times
     u = Y - ft # Calculating error in m
     
     # calculating optimum coefficients
@@ -56,7 +60,7 @@ Fitting = function(Y, X, M, v, AICc){
     
     for (i in X){
       
-      b = solve(t(i)%*%i)%*%t(i)%*%u
+      b = t(i) %*% u %*% 1/sum(i^2)
       
       teta = c(teta, b)
       
@@ -67,6 +71,7 @@ Fitting = function(Y, X, M, v, AICc){
     SSR = c()
     
     for (i in 1:length(teta)){
+      
       sum_squared_resid = sum((u - teta[i]*X[,i])^2)
       
       SSR = c(SSR, sum_squared_resid)
@@ -80,9 +85,12 @@ Fitting = function(Y, X, M, v, AICc){
     
     # Calculating g (vector of selected predictor * optimum coefficient)
     g = teta[index]*X_optimum
+    
     coefficient_control[index] = coefficient_control[index] + teta[index]
     
     choosed_predictors[index] = choosed_predictors[index] + 1
+    
+    s = append(s, index)
     
     # Updating ft
     ft = ft + v*g
@@ -104,10 +112,40 @@ Fitting = function(Y, X, M, v, AICc){
   MSE = (sum((f_optimum - Y)^2)/nrow(X)) 
   
   # AIC
-  llg = sum(dnorm(Y, mean = ft, sd = MSE, log = TRUE)) # calculate the log likelihood
-  k = sum(choosed_predictors) + 2 # quantity of parameters plus SD and Mean
   
-  AIC = (-2*llg + 2*k)
+  # Calculating hat matrix
+  
+  for (j in M:1){
+    
+    H = as.matrix(X[,s[j]]) %*% (1/sum((X[,s[j]])^2)) %*% t(as.matrix(X[,s[j]]))
+    
+    if (j == M){
+      
+      C = diag(nrow(X)) - v * H
+      
+    } else {
+      
+      C = C %*% (diag(nrow(X)) - v * H)
+      
+    }
+    
+  }
+  
+  # Calculating Big Beta
+  
+  B = diag(nrow(X)) - C
+  
+  # Calculating sigma squared
+  
+  sigma = nrow(X)^(-1) * sum((Y - ( B %*% Y ))^2)
+  
+  # Calculating trace
+  
+  df_m = sum(diag(B))
+  
+  # Calculating AIC
+  
+  AIC = log(sigma) + (1 + df_m/nrow(X))/(1 - (df_m + 2)/nrow(X))
   
   # AICc
   
@@ -226,6 +264,7 @@ print_AIC = function(start, end, by = 1, Y, X, v, AICc) {
     m_vector_in = Fitting(Y, X, i, v, AICc)[2]
     
     m_vector = c(m_vector, m_vector_in)
+    print(i/end)
   }
   
   plot(seq(start, end, by), m_vector, type = "l", xlab = "m", ylab = "IC")
@@ -233,5 +272,5 @@ print_AIC = function(start, end, by = 1, Y, X, v, AICc) {
 
 ## Example
 
-print_AIC(0, 250, 10, Y, X, v, AICc)
+print_AIC(1, 500, 50, Y, X, 0.1, F)
 
