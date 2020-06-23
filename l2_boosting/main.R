@@ -11,17 +11,17 @@
 #2019-6-19
 
 # Getting data from github without the first column
-data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados_brasil.csv")
+data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados.csv")[,-1]
 
 # Selecting data
-Y = data[,1] # Response variable
+Y = data[,ncol(data)] # Response variable
 
-X = data[,3:ncol(data)] # Predictors variables
+X = data[,1:(ncol(data)-1)] # Predictors variables
 
 # Getting functions
 # Module for L2 functions
 
-Fitting = function(Y, X, M, v, AICc){
+Fitting = function(Y, X, M, v){
   
   # Defining variables
   ft = mean(Y) # First appearence of function ft
@@ -147,33 +147,21 @@ Fitting = function(Y, X, M, v, AICc){
   
   AIC = log(sigma_squared) + (1 + df_m/nrow(X))/(1 - (df_m + 2)/nrow(X))
   
-  # AICc
+  # Computing final vector
   
-  if (AICc) {
-    
-    AICC = AIC + ((2*k)^(2) + 2*k)/(length(Y) - k - 1)
-    
-    specific_IC = AICC
-    
-  } else {
-    
-    specific_IC = AIC
-    
-  }
-  
-  final_vector = list(MSE, specific_IC, Matrix_coef, ft, Y-ft)
+  final_vector = list(MSE, AIC, Matrix_coef, ft, Y-ft)
   return(final_vector)
 }
 
-L2_min = function(Y, X, v, AICc){
+L2_min = function(Y, X, v){
   
-  x = Fitting(Y, X, 2, v , AICc)[[2]]
-  IC = c(Fitting(Y, X, 1, v, AICc)[[2]], x)
+  x = Fitting(Y, X, 2, v)[[2]]
+  IC = c(Fitting(Y, X, 1, v)[[2]], x)
   i = 3
   
   while(IC[length(IC)-1] > x) {
     
-    x = Fitting(Y, X, i, v, AICc)[[2]]
+    x = Fitting(Y, X, i, v)[[2]]
     
     IC = c(IC, x)
     
@@ -184,15 +172,15 @@ L2_min = function(Y, X, v, AICc){
   return(i-2)
 }
 
-L2_boost = function(Y, X, v, AICc) {
+L2_boost = function(Y, X, v) {
   
   # Function for minimizing AIC 
   
   # Optimal M
-  m_opt = L2_min(Y, X, v, AICc)
+  m_opt = L2_min(Y, X, v)
   
   # Fitting
-  optimal = Fitting(Y, X, m_opt, v, AICc)
+  optimal = Fitting(Y, X, m_opt, v)
   
   coefficients_in = optimal[[3]][nrow(optimal[[3]]),]
   names(coefficients_in) = names(X)
@@ -215,15 +203,54 @@ L2_boost = function(Y, X, v, AICc) {
   
 }
 
+prediciton_boost = function(Y, X, v, h, ratio_start = 0.75) {
+  h = 1
+  v = 0.5
+  edge = ceiling(nrow(X)*ratio_start)
+  
+  X_train = X[1:(edge-(h-1)),]
+  Y_train = Y[1:(edge-(h-1))]
+  
+  Y_predicted = c()
+  
+  X_test = X[(edge+1):nrow(X),]
+  Y_test = Y[(edge+1):nrow(X)]
+  
+  management = list()
+  
+  k = 0
+  
+  for(i in edge+1:nrow(X)){
+    
+  m_otimo = L2_min(Y_train, X_train, v)
+    
+  L2_predicted = Fitting(Y_train, X_train, m_otimo, v)  
+
+  y_predicted = as.matrix(X[i,]) %*% as.matrix(L2_predicted[[3]][nrow(L2_predicted[[3]]),])
+  
+  Y_predicted = append(Y_predicted, y_predicted)
+  
+  management = append(management, L2_predicted)
+  
+  k = k + 1  
+  
+  X_train = X[1:edge-(h-1)+k,]
+  Y_train = Y[1:edge-(h-1)+k]  
+  print(k/length(Y_train))
+  
+  }
+  
+}
+
 # Creating function L2_boost:
 # INPUT: Y - response ; X - predictors ; M - Iterations ; v - shrinkage parameter (standart 0.1)
 # OUTPUT : MSE of algorithm ; times each predictor was choosed
-v = 0.1
+v = 0.2
 AICc = F
 
-b = L2_boost(Y, X, v, AICc)
+b0.2 = L2_boost(Y, X, v)
 
-b$a()
+b0.2$a()
 
 # Function for Historical Coefficients Plotting
 
@@ -237,12 +264,12 @@ coef_hist = function(arg) {
 coef_hist(b)
 
 # Function for MSE printing
-print_L2_boost = function(start, end, by = 1, Y, X, v, AICc) {
+print_L2_boost = function(start, end, by = 1, Y, X, v) {
   
   m_vector = c()
   
   for (i in seq(start, end, by)) {
-    m_vector_in = Fitting(Y, X, i, v, AICc)[1]
+    m_vector_in = Fitting(Y, X, i, v)[1]
     
     m_vector = c(m_vector, m_vector_in)
   }
@@ -252,16 +279,16 @@ print_L2_boost = function(start, end, by = 1, Y, X, v, AICc) {
 
 ## Example
 
-print_L2_boost(0, 250, 10, Y, X, v, AICc)
+print_L2_boost(0, 250, 10, Y, X, v)
 
 # Function for AIC printing
 
-print_AIC = function(start, end, by = 1, Y, X, v, AICc) {
+print_AIC = function(start, end, by = 1, Y, X, v) {
   
   m_vector = c()
   
   for (i in seq(start, end, by)) {
-    m_vector_in = Fitting(Y, X, i, v, AICc)[2]
+    m_vector_in = Fitting(Y, X, i, v)[2]
     
     m_vector = c(m_vector, m_vector_in)
     print(i/end)
@@ -272,5 +299,5 @@ print_AIC = function(start, end, by = 1, Y, X, v, AICc) {
 
 ## Example
 
-print_AIC(1, 100, 2, Y, X, 0.2, F)
+print_AIC(110, 160, 1, Y, X, 0.1)
 
