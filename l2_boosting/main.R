@@ -11,12 +11,12 @@
 #2019-6-19
 
 # Getting data from github without the first column
-data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados.csv")[,-1]
+data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados_brasil.csv")[,-1]
 
 # Selecting data
-Y = data[,ncol(data)] # Response variable
+Y = data[,1] # Response variable
 
-X = data[,1:(ncol(data)-1)] # Predictors variables
+X = data[,3:(ncol(data)-1)] # Predictors variables
 
 # Getting functions
 # Module for L2 functions
@@ -153,11 +153,11 @@ Fitting = function(Y, X, M, v){
   return(final_vector)
 }
 
-L2_min = function(Y, X, v){
+L2_min = function(Y, X, v, m_start = 3){
   
-  x = Fitting(Y, X, 2, v)[[2]]
-  IC = c(Fitting(Y, X, 1, v)[[2]], x)
-  i = 3
+  i = m_start
+  x = Fitting(Y, X, i-1, v)[[2]]
+  IC = c(Fitting(Y, X, i-2, v)[[2]], x)
   
   while(IC[length(IC)-1] > x) {
     
@@ -203,15 +203,16 @@ L2_boost = function(Y, X, v) {
   
 }
 
+library(forecast)
 prediciton_boost = function(Y, X, v, h, ratio_start = 0.75) {
-  h = 1
-  v = 0.5
+
   edge = ceiling(nrow(X)*ratio_start)
   
   X_train = X[1:(edge-(h-1)),]
   Y_train = Y[1:(edge-(h-1))]
   
   Y_predicted = c()
+  Y_arima = c()
   
   X_test = X[(edge+1):nrow(X),]
   Y_test = Y[(edge+1):nrow(X)]
@@ -219,28 +220,48 @@ prediciton_boost = function(Y, X, v, h, ratio_start = 0.75) {
   management = list()
   
   k = 0
+  m_start = 3
   
-  for(i in edge+1:nrow(X)){
+  for(i in (edge+1):(nrow(X))){
+  
+  #m_otimo = L2_min(Y_train, X_train, v, m_start)
+  
+  #m_start = ceiling((1/2)*m_otimo)
     
-  m_otimo = L2_min(Y_train, X_train, v)
-    
-  L2_predicted = Fitting(Y_train, X_train, m_otimo, v)  
+  L2_predicted = Fitting(Y_train, X_train, 100, v)  
 
   y_predicted = as.matrix(X[i,]) %*% as.matrix(L2_predicted[[3]][nrow(L2_predicted[[3]]),])
   
   Y_predicted = append(Y_predicted, y_predicted)
   
-  management = append(management, L2_predicted)
+  bench = arima(Y_train, c(1,0,0))
+  forecast_bench = forecast(bench, h)
+  y_predicted_bench = forecast_bench$mean[h]
+  Y_arima = append(Y_arima, y_predicted_bench)
+
+  management = append(management, list(L2_predicted))
   
   k = k + 1  
   
-  X_train = X[1:edge-(h-1)+k,]
-  Y_train = Y[1:edge-(h-1)+k]  
-  print(k/length(Y_train))
+  X_train = X[1:(edge-(h-1)+k),]
+  Y_train = Y[1:(edge-(h-1)+k)]  
+  print(k/length(Y_test))
   
   }
   
 }
+
+# Avaliando modelo com benchmark
+plot(Y_test, type = "l", col = "red", ylim = c(-1.3,1.3))
+lines(Y_arima, col = "blue")
+lines(Y_predicted, col = "green")
+
+erro_noss = (sum(Y_test - Y_predicted)^(2))/47
+erro_ar = (sum(Y_test - Y_arima)^(2))/47
+print(erro_ar)
+print(erro_noss)
+# Fim da avaliação do modelo com benchmakr
+
 
 # Creating function L2_boost:
 # INPUT: Y - response ; X - predictors ; M - Iterations ; v - shrinkage parameter (standart 0.1)
