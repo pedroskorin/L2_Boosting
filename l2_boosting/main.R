@@ -255,7 +255,7 @@ prediciton_boost = function(Y, X, v, h, ratio_start = 0.75, Mstop = 100) {
 
 # Avaliando modelo com benchmark
 
-a = prediciton_boost(Y,X,v=1, h=12, Mstop = L2_min(Y,X,1))
+a = prediciton_boost(Y,X,v=1, h=12, Mstop = 1)
 RMSFE_boost = sqrt(sum((a$FE_boost)^2) * (1/length(a$test)))
 RMSFE_arima = sqrt(sum((a$FE_bench)^2) * (1/length(a$test)))
 rRMSFE = RMSFE_boost/RMSFE_arima
@@ -273,6 +273,9 @@ h = c(1,2,3,6,12)
 m = c(1,15,50,100)
 results <- as.data.frame(matrix(,ncol=length(m),nrow=0))
 names(results) <- m
+
+var <- as.data.frame(matrix(,ncol=length(m),nrow=0))
+names(var) <- m
 
 for (k in 1:length(m)){
 
@@ -292,6 +295,8 @@ for (i in 1:length(h)){
   RMSFE_arima = sqrt(sum((a$FE_bench)^2) * (1/length(a$test)))
   rRMSFE = RMSFE_boost/RMSFE_arima
   results[i,k] = rRMSFE
+  
+  var[i,k] = var(a$FE_boost)
 if(i ==1){
   mtext(paste("mstop =", m[k]), outer = F, cex = 1, side = 4, adj = 1)
 
@@ -302,6 +307,7 @@ if(i ==1){
 }
 
 rownames(results) <- h
+rownames(var) <- h
 # Fim da avaliação do modelo com benchmark
 
 
