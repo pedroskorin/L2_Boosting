@@ -256,6 +256,7 @@ prediciton_boost = function(Y, X, v, h, ratio_start = 0.75, Mstop = 100) {
 # Avaliando modelo com benchmark
 
 a = prediciton_boost(Y,X,v=1, h=12, Mstop = 1)
+
 RMSFE_boost = sqrt(sum((a$FE_boost)^2) * (1/length(a$test)))
 RMSFE_arima = sqrt(sum((a$FE_bench)^2) * (1/length(a$test)))
 rRMSFE = RMSFE_boost/RMSFE_arima
@@ -271,10 +272,10 @@ lines(a$forecast, col = "green")
 ####### graph maker for comparison between h's
 h = c(1,2,3,6,12)
 m = c(1,15,50,100)
-results <- as.data.frame(matrix(,ncol=length(m),nrow=0))
+results <- as.data.frame(matrix(ncol=length(m),nrow=0))
 names(results) <- m
 
-var <- as.data.frame(matrix(,ncol=length(m),nrow=0))
+var <- as.data.frame(matrix(ncol=length(m),nrow=0))
 names(var) <- m
 
 for (k in 1:length(m)){
