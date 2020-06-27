@@ -11,7 +11,7 @@
 #2019-6-19
 
 # Getting data from github without the first column
-data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados_brasil.csv")[,-1]
+data = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados_brasil2.csv")[,-1]
 
 # Selecting data
 Y = data[,1] # Response variable
@@ -204,7 +204,7 @@ L2_boost = function(Y, X, v) {
 }
 
 library(forecast)
-prediciton_boost = function(Y, X, v, h, ratio_start = 0.75) {
+prediciton_boost = function(Y, X, v, h, ratio_start = 0.75, Mstop = 100) {
 
   edge = ceiling(nrow(X)*ratio_start)
   
@@ -228,7 +228,7 @@ prediciton_boost = function(Y, X, v, h, ratio_start = 0.75) {
   
   #m_start = ceiling((1/2)*m_otimo)
     
-  L2_predicted = Fitting(Y_train, X_train, 100, v)  
+  L2_predicted = Fitting(Y_train, X_train, Mstop, v)  
 
   y_predicted = as.matrix(X[i,]) %*% as.matrix(L2_predicted[[3]][nrow(L2_predicted[[3]]),])
   
@@ -248,19 +248,24 @@ prediciton_boost = function(Y, X, v, h, ratio_start = 0.75) {
   print(k/length(Y_test))
   
   }
-  
+  results <- list(forecast = Y_predicted, benchmark = Y_arima, mng = management, 
+                  FE_boost = Y_test - Y_predicted, FE_bench = Y_test - Y_arima, test = Y_test)
+  return(results)
 }
 
 # Avaliando modelo com benchmark
-plot(Y_test, type = "l", col = "red", ylim = c(-1.3,1.3))
-lines(Y_arima, col = "blue")
-lines(Y_predicted, col = "green")
 
-erro_noss = (sum(Y_test - Y_predicted)^(2))/47
-erro_ar = (sum(Y_test - Y_arima)^(2))/47
-print(erro_ar)
-print(erro_noss)
-# Fim da avaliação do modelo com benchmakr
+a = prediciton_boost(Y,X,v=1, h=12, Mstop = L2_min(Y,X,1))
+RMSFE_boost = sqrt(sum((a$FE_boost)^2) * (1/length(a$test)))
+RMSFE_arima = sqrt(sum((a$FE_bench)^2) * (1/length(a$test)))
+rRMSFE = RMSFE_boost/RMSFE_arima
+print(rRMSFE)
+
+plot(a$test, type = "l", col = "red", ylim = c(-1.3,1.3))
+lines(a$benchmark, col = "blue")
+lines(a$forecast, col = "green")
+
+# Fim da avaliação do modelo com benchmark
 
 
 # Creating function L2_boost:
