@@ -270,19 +270,38 @@ lines(a$forecast, col = "green")
 
 ####### graph maker for comparison between h's
 h = c(1,2,3,6,12)
-par(mfrow = c(5,1), mar = c(1,2,1,2))
-for (i in h){
-  print(i)
-  a = prediciton_boost(Y,X,v=1, h=i, Mstop = 50)
+m = c(1,15,50,100)
+results <- as.data.frame(matrix(,ncol=length(m),nrow=0))
+names(results) <- m
+
+for (k in 1:length(m)){
+
+  par(mfrow = c(5,1), mar = c(1,2,1,2))
   
-  plot(a$test, type = "l", col = "red", main = paste("h =", i))
+for (i in 1:length(h)){
+
+  print(i)
+  a = prediciton_boost(Y,X,v=0.5, h[i], Mstop = m[k])
+  
+  plot(a$test, type = "l", col = "red",ylim = c(-1.3,1.3), main = paste("h =", h[i]))
   
   lines(a$benchmark, col = "blue")
   lines(a$forecast, col = "green")
   
+  RMSFE_boost = sqrt(sum((a$FE_boost)^2) * (1/length(a$test)))
+  RMSFE_arima = sqrt(sum((a$FE_bench)^2) * (1/length(a$test)))
+  rRMSFE = RMSFE_boost/RMSFE_arima
+  results[i,k] = rRMSFE
+if(i ==1){
+  mtext(paste("mstop =", m[k]), outer = F, cex = 1, side = 4, adj = 1)
+
+}  
+  
+}
   
 }
 
+rownames(results) <- h
 # Fim da avaliação do modelo com benchmark
 
 
