@@ -234,7 +234,9 @@ prediciton_boost = function(Y, X, v, h, ratio_start = 0.75, Mstop = 100) {
   
   Y_predicted = append(Y_predicted, y_predicted)
   
-  bench = arima(Y_train, c(1,0,0))
+  bench = arima(Y_train, c(1,0,0)
+                #, seasonal = list(order = c(1,0,0), period = 12)
+                )
   forecast_bench = forecast(bench, h)
   y_predicted_bench = forecast_bench$mean[h]
   Y_arima = append(Y_arima, y_predicted_bench)
@@ -255,7 +257,7 @@ prediciton_boost = function(Y, X, v, h, ratio_start = 0.75, Mstop = 100) {
 
 # Avaliando modelo com benchmark
 
-a = prediciton_boost(Y,X,v=1, h=12, Mstop = 1)
+a = prediciton_boost(Y,X,v=.1, h=6, Mstop = 100)
 
 RMSFE_boost = sqrt(sum((a$FE_boost)^2) * (1/length(a$test)))
 RMSFE_arima = sqrt(sum((a$FE_bench)^2) * (1/length(a$test)))
@@ -263,7 +265,7 @@ rRMSFE = RMSFE_boost/RMSFE_arima
 print(rRMSFE)
 
 
-plot(a$test, type = "l", col = "red", ylim = c(-1.3,1.3), main = paste("h =", 1))
+plot(a$test, type = "l", col = "red", ylim = c(-1.3,1.3))
 
 lines(a$benchmark, col = "blue")
 lines(a$forecast, col = "green")
@@ -287,7 +289,7 @@ for (i in 1:length(h)){
   print(i)
   a = prediciton_boost(Y,X,v=0.5, h[i], Mstop = m[k])
   
-  plot(a$test, type = "l", col = "red",ylim = c(-1.3,1.3), main = paste("h =", h[i]))
+  plot(a$test, type = "l", col = "red",ylim = c(-.3,.3), main = paste("h =", h[i]))
   
   lines(a$benchmark, col = "blue")
   lines(a$forecast, col = "green")
@@ -315,10 +317,10 @@ rownames(var) <- h
 # Creating function L2_boost:
 # INPUT: Y - response ; X - predictors ; M - Iterations ; v - shrinkage parameter (standart 0.1)
 # OUTPUT : MSE of algorithm ; times each predictor was choosed
-v = 0.2
+v = 1
 AICc = F
 
-b0.2 = L2_boost(Y, X, v)
+b = L2_boost(Y, X, v)
 
 b0.2$a()
 
