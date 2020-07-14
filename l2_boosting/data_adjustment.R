@@ -12,10 +12,10 @@ library(x12)
 library(seastests)
 
 # Retiradas de bases brutas
-nacional_mensal <- data.frame(read_csv("GitHub/ipea/dados_boosting/nacional_mensal.csv"))
-metereologicos <- data.frame(read_csv("GitHub/ipea/dados_boosting/metereologicos.csv"))
-internacional <- data.frame(read_csv("GitHub/ipea/dados_boosting/internacional.csv"))
-regional <- data.frame(read_csv("GitHub/ipea/dados_boosting/regional.csv"))
+nacional_mensal = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/nacional_mensal.csv"))
+metereologicos = data.frame(read_csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/metereologicos.csv"))
+internacional = data.frame(read_csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/internacional.csv"))
+regional = data.frame(read_csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/regional.csv"))
 
 
 nacional_mensal = nacional_mensal[,-1]
@@ -62,7 +62,7 @@ base_dess = cbind(base_bruta[,1], base_dess)
 
 ## Processo de estacionarizacao ####
 
-base_ponto = base_dess
+base_ponto = base_bruta
 
 ## Deteccao de tipo de dado
 
@@ -123,6 +123,20 @@ preparacao = function(X, i) {
   }
 }
 
+cresc_discreto = function(X) {
+  
+  Y = c()
+  
+  for (i in 2:length(X)) {
+    
+    y = X[i]/X[i-1]-1
+    
+    Y = append(Y, y)
+    
+  }
+  
+  return(Y)
+}
 
 for(i in 2:ncol(base_ponto)){
   print(i)
@@ -192,6 +206,8 @@ for (i in which(test == 2)) {
   
 }
 
+table(test)
+
 # Aplicacao dos Lags ####
 
 base_estacionaria = as.data.frame(base_ponto[-1:-2,1])
@@ -248,4 +264,4 @@ for (i in 2:ncol(base_ponto)) {
 colnames(base_estacionaria) = colnames(base_ponto)
 colnames(base_estacionaria)[1] = "Data"
 
-#write.csv(base_estacionaria,"C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\regressors.csv" )
+write.csv(base_estacionaria,"C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\regressors_saz.csv" )
