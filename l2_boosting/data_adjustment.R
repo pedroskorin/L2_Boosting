@@ -12,10 +12,14 @@ library(x12)
 library(seastests)
 
 # Retiradas de bases brutas
-nacional_mensal = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/nacional_mensal.csv"))
-metereologicos = data.frame(read_csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/metereologicos.csv"))
-internacional = data.frame(read_csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/internacional.csv"))
-regional = data.frame(read_csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/regional.csv"))
+nacional_mensal = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/nacional_mensal.csv",
+                                      encoding = "UTF-8"))
+metereologicos = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/metereologicos.csv",
+                                     encoding = "UTF-8"))
+internacional = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/internacional.csv",
+                                    encoding = "UTF-8"))
+regional = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/regional.csv",
+                               encoding = "UTF-8"))
 
 
 nacional_mensal = nacional_mensal[,-1]
@@ -264,4 +268,4 @@ for (i in 2:ncol(base_ponto)) {
 colnames(base_estacionaria) = colnames(base_ponto)
 colnames(base_estacionaria)[1] = "Data"
 
-write.csv(base_estacionaria,"C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\regressors_saz.csv" )
+write.csv(base_estacionaria,"C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\regressors_saz.csv", fileEncoding = "UTF-8" )
