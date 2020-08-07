@@ -1,16 +1,8 @@
 
-Y_or = log(consumo_energia_RS)
-Y = diff(log(consumo_energia_RS))
-
-Y_or = log(nacional_mensal[,70]*1000)[-1]
-Y = diff(log(nacional_mensal[,70]*1000))[-1]
-
-X = X[,-1]
-
 Y_or = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/target.csv",
                                encoding = "UTF-8")[,4]
 Y = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/target.csv",
-                                    encoding = "UTF-8")[,3]
+                                    encoding = "UTF-8")[-1,3]
 X = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/predictors.csv",
                                encoding = "UTF-8")[,-c(1,2)]
 
