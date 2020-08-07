@@ -13,7 +13,7 @@ library(seastests)
 
 # Retiradas de bases brutas
 nacional_mensal = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/nacional_mensal.csv",
-                                      encoding = "UTF-8"))
+                                      encoding = "latin1"))
 metereologicos = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/metereologicos.csv",
                                      encoding = "UTF-8"))
 internacional = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/internacional.csv",
@@ -33,9 +33,11 @@ base_bruta = cbind(nacional_mensal,
                    regional,
                    internacional)
 
-# Criacao do consumo estadual
-consumo_energia_RS = base_bruta[,726] + base_bruta[,733] +
-  base_bruta[,740]
+base_bruta = base_bruta[,-167]
+
+# Criacao do consumo estadual VER O NÚMERO DE VERDADE JÁ QUE MUDOU
+#consumo_energia_RS = base_bruta[,702] + base_bruta[,709] +
+#  base_bruta[,716]
 
 # Processo de dessazonalizacao ####
 
@@ -73,7 +75,7 @@ base_ponto = base_bruta
 tipo = c(4)
 
 for (i in 2:ncol(base_ponto)){
-  
+  print(i)
   if (sum(base_ponto[,i]<0) > 0) {
     
     if (sum(base_ponto[,i]==0) > 0) {
@@ -214,7 +216,10 @@ table(test)
 
 # Aplicacao dos Lags ####
 
-base_estacionaria = as.data.frame(base_ponto[-1:-2,1])
+base_ponto = base_ponto[,-167]
+
+
+base_estacionaria = as.data.frame(base_ponto[-1,1])
 
 for (i in 2:ncol(base_ponto)) {
   print(i)
@@ -222,14 +227,16 @@ for (i in 2:ncol(base_ponto)) {
   
   if (test[i] == 0) {
     
-    X = X[-1:-2]
+    #X = X[-1:-2]
+    X = X[-1]
   }
   
   if (test[i] == 0.5) {
     
     X = preparacao(X, i)
     
-    X = X[-1:-2]
+    #X = X[-1:-2]
+    X = X[-1]
     
   }
   
@@ -244,7 +251,7 @@ for (i in 2:ncol(base_ponto)) {
       X = cresc_discreto(X)
     }
     
-    X = X[-1]
+#    X = X[-1]
   }
   
   if (test[i] == 2) {
@@ -267,5 +274,9 @@ for (i in 2:ncol(base_ponto)) {
 # Nomeacao das colunas
 colnames(base_estacionaria) = colnames(base_ponto)
 colnames(base_estacionaria)[1] = "Data"
+base_estacionaria = base_estacionaria[-191,]
 
-write.csv(base_estacionaria,"C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\regressors_saz.csv", fileEncoding = "UTF-8" )
+
+write.csv(base_estacionaria,"C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\predictors.csv", fileEncoding = "UTF-8" )
+
+write.csv(Y_dados, "C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\target.csv", fileEncoding = "UTF-8")
