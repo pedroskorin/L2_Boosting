@@ -216,9 +216,6 @@ table(test)
 
 # Aplicacao dos Lags ####
 
-base_ponto = base_ponto[,-167]
-
-
 base_estacionaria = as.data.frame(base_ponto[-1,1])
 
 for (i in 2:ncol(base_ponto)) {
