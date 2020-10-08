@@ -103,7 +103,7 @@ prediciton_boost = function(Y_or, Y, X, v, h, ratio_start = 0.8, Mstop = 3500) {
 # Example with v=0.1, h=1, M_max = 2500 and ratio_start = 80%
 
 v_in = 0.1
-h_in = 2
+h_in = 1
 Mstop_in = 2500
 ratio_start_in = 0.8
 
