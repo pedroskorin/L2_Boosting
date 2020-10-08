@@ -6,4 +6,4 @@ Professor: Hudson da Silva Torrent
 
 Project Members: Guilherme Lindenmeyer and Pedro Pablo Skorin
 
-Objective: Implementation of the boosting algorithm for the forecasting of the agricultural output of Rio Grande do Sul.
+Objective: Implementation of the boosting algorithm for the forecasting of the electrical energy demand in Rio Grande do Sul.
