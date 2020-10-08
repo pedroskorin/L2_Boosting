@@ -6,10 +6,7 @@
 
 # Pacotes
 library(readr)
-library(tseries)
 library(urca)
-library(x12)
-library(seastests)
 
 # Retiradas de bases brutas
 nacional_mensal = data.frame(read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/dados/history/base_bruta/nacional_mensal.csv",
@@ -34,37 +31,6 @@ base_bruta = cbind(nacional_mensal,
                    internacional)
 
 base_bruta = base_bruta[,-167]
-
-# Criacao do consumo estadual VER O NÚMERO DE VERDADE JÁ QUE MUDOU
-#consumo_energia_RS = base_bruta[,702] + base_bruta[,709] +
-#  base_bruta[,716]
-
-# Processo de dessazonalizacao ####
-
-dessaz = function(X) {
-  
-  X_ts = ts(X, frequency = 12, start = c(2002,1))
-  model <- wo(X_ts)
-  
-  if (model$stat) {
-  
-  xts <- x12(X_ts)
-  
-  return(xts@d11) # serie dessazonalizada
-  
-  } else {
-    
-  return(X_ts)
-    
-  }
-
-}
-
-base_dess = sapply(base_bruta[,-1], dessaz)
-
-base_dess = as.data.frame(base_dess)
-
-base_dess = cbind(base_bruta[,1], base_dess)
 
 ## Processo de estacionarizacao ####
 
@@ -271,7 +237,7 @@ for (i in 2:ncol(base_ponto)) {
 # Nomeacao das colunas
 colnames(base_estacionaria) = colnames(base_ponto)
 colnames(base_estacionaria)[1] = "Data"
-base_estacionaria = base_estacionaria[-191,]
+#base_estacionaria = base_estacionaria[-191,]
 
 
 write.csv(base_estacionaria,"C:\\Users\\Pedro.Pedro-PC\\Documents\\GitHub\\L2_Boosting\\l2_boosting\\dados\\predictors.csv", fileEncoding = "UTF-8" )

@@ -37,7 +37,7 @@ plot.ts(y)
 
 n.tot <- length(y) # numero de obs.
 n.out <- 300 # numero de obs. fora da amostra
-h <- 1 # horizonte de previsao
+h <- 3 # horizonte de previsao
 
 ind.out <- seq(to = n.tot, by = 1, length = n.out)
 #ind.in <- seq(from = 1, to = ind.out[1] - h, by = 1)

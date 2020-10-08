@@ -197,7 +197,7 @@ L2_boost = function(Y, X, v) {
 }
 
 library(forecast)
-prediciton_boost = function(Y, X, v, h, ratio_start = 0.75, Mstop = 100) {
+prediciton_boost = function(Y, X, v, h, ratio_start = 0.8, Mstop = 100) {
   
   n_tot <- length(Y)
   n_out <- ceiling(n_tot - ratio_start*n_tot)
@@ -272,9 +272,9 @@ Y = diff(log(consumo_energia_RS))[-1]
 # Avaliacao específica ####
 
 # Selecao de parametros
-v = 0.5
+v = 0.3
 h_in = 1
-Mstop = 30
+Mstop = 1656
 ratio_start = 0.8
 
 # Forecasting
@@ -292,26 +292,30 @@ print(rRMSFE)
 
 # Plotando grafico ####
 
-plot((a$test[1:35]), type = "l", col = "black",
-     ylim = c(1600000, max(a$forecast)*1.05),
+plot((a$test), type = "l", col = "black",
+     ylim = c(min(a$forecast), max(a$test)),
      main = paste("v =", v, "| h =", h_in, "| M =", Mstop, "| rRMSFE =", round(rRMSFE,2)),
      ylab = "Y")
 
-lines((a$benchmark)[1:35], col = "blue")
-lines((a$forecast)[1:35], col = "red")
+lines((a$benchmark), col = "blue")
+lines((a$forecast), col = "red")
 
 # Calculando MAPE
 MAE_boost = mean(abs((exp(a$test)-exp(a$forecast))))
 MAE_boost
 
 MAPE_boost_exp = mean(abs((exp(a$test)-exp(a$forecast))/exp((a$test))))*100
+MAPE_boost_exp = (abs((exp(a$test)-exp(a$forecast))/exp((a$test))))*100
 MAPE_boost_exp
+
+MAPE_boost = mean(abs(((a$test)-(a$forecast))/((a$test))))*100
+MAPE_bench = mean(abs(((a$test)-(a$benchmark))/((a$test))))*100
 
 MAPE_boost = mean(abs(((a$test[1:35])-(a$forecast[1:35]))/(a$test[1:35])))*100
 MAPE_boost
 
 MAPE_bench_exp = mean(abs((exp(a$test)-exp(a$benchmark))/exp((a$test))))*100
-MAPE_bench_exp
+MAPE_bench_exp = (abs((exp(a$test)-exp(a$benchmark))/exp((a$test))))*100
 
 MAPE_bench = mean(abs(((a$test)-(a$benchmark))/(a$test)))*100
 MAPE_bench 
@@ -340,10 +344,11 @@ print(MAPE_boost/MAPE_bench)
 # Apresentacao de variaveis escolhidas
 
 choosed = rep(0, ncol(cbind(Y,X)))
-tamanho = Mstop
 
-for(i in 1:(length(a$test)-1)) {
+for(i in 1:(length(a$test))) {
 
+  tamanho = length(a$mng[[i]][[3]][,1])
+  
   w = which(a$mng[[i]][[3]][tamanho,] != 0)
       
   choosed[w] = choosed[w] + 1

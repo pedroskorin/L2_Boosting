@@ -74,13 +74,13 @@ prediciton_boost_2 = function(Y_or, Y, X, v, h, ratio_start = 0.75, Mstop = 100)
 b = prediciton_boost_2(Y_or,
                        Y,
                        X,
-                       v = 0.2,
-                       h = 4,
+                       v = 0.7,
+                       h = 1,
                        ratio_start = 0.8,
-                       Mstop = 70)
+                       Mstop = 1000)
 
 
-plot(exp(Y_or[153:191]), type = "l", ylim = c(exp(14.2), exp(14.8)))
+plot(exp(Y_or[153:191]), type = "l", ylim = c(exp(14.2), exp(15)))
 # 
 lines(exp(b$benchmark[]), col = "blue")
 
@@ -92,3 +92,18 @@ MAPE_boost_2
 
 MAPE_bench_2 = mean((abs(exp(Y_or[ind_out+1])-exp(b$benchmark[-1]))/exp(Y_or[ind_out+1])))*100
 MAPE_bench_2
+
+# Select all of 2016 from x
+Y_or_bench <- as.xts(Y_or_bench)
+Y_or_boost <- as.xts(Y_or_boost)
+ts_demanda <- as.xts(ts_demanda)
+
+xts_dados = cbind(ts_demanda, Y_or_bench, Y_or_boost)
+
+# Select January 1, 2016 to March 22, 2016
+jan_march <- Y_or_bench["20160101/20160322"]
+
+# Verify that jan_march contains 82 rows
+82 == length(jan_march)
+
+xts(as.ts(Y_or_bench), Y_or_boost)
