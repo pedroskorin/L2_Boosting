@@ -46,7 +46,7 @@ prediciton_boost = function(Y_or, Y, X, v, h, ratio_start = 0.8, Mstop = 3500) {
       
       model_1 = glmboost(y_reg_uni ~ ., data = x_reg,
                          family = Gaussian(),
-                         control = boost_control(mstop = 2500, nu = v),
+                         control = boost_control(mstop = Mstop, nu = v),
                          center = T)
       
       AIC = AIC(model_1, method = "corrected" , df = "actset")
@@ -168,3 +168,79 @@ names(var_imp) = c("Intercept", "Y_{t-1}", colnames(X))
 df = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
                 name = names(var_imp[order(var_imp, decreasing = T)]))
 
+# Plotting graph
+
+library(ggplot2)
+library(reshape2)
+
+# Plot
+
+date = seq(as.Date("2003/2/1"), as.Date("2017/10/1"), "months")
+
+intervalo = 130:177
+
+Boosting = exp(Y_or[intervalo])
+SARIMA = exp(Y_or[intervalo])
+Original = exp(Y_or[intervalo])
+date = date[intervalo]
+
+n = length(tail(exp(b$forecast_uni),-1))
+
+Boosting[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b$forecast_uni),-1)
+SARIMA[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b$benchmark),-1)
+
+df = data.frame(date = date, SARIMA = SARIMA, 
+                Boosting  = Boosting, Original = Original)
+
+meltdf = melt(df, id = "date")
+colnames(meltdf)[2] = "Model"
+
+meltdf_1$date = seq(as.Date("2013/11/1"), as.Date("2017/10/1"), "months")
+meltdf_2$date = seq(as.Date("2013/11/1"), as.Date("2017/10/1"), "months")
+meltdf_3$date = seq(as.Date("2013/11/1"), as.Date("2017/10/1"), "months")
+
+# Multiple line plot
+p1 = ggplot(meltdf_1, aes(x = date, y = value)) + 
+  geom_line(aes(color = Model), size = 0.3) +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07", "black")) +
+  theme_minimal() +
+  xlab("") +
+  ggtitle("h = 1") +
+  ylab("")
+
+p2 = ggplot(meltdf_2, aes(x = date, y = value)) + 
+  geom_line(aes(color = Model), size = 0.3) +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07", "black")) +
+  theme_minimal() +
+  xlab("") +
+  ylab("Consumption in MWh") +
+  ggtitle("h = 2")
+
+p3 = ggplot(meltdf_3, aes(x = date, y = value)) + 
+  geom_line(aes(color = Model), size = 0.3) +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07", "black")) +
+  theme_minimal() +
+  xlab("Time") +
+  ylab("") +
+  ggtitle("h = 3")
+
+library(cowplot)
+
+prow <- plot_grid( p1 + theme(legend.position="none"),
+                   p2 + theme(legend.position="none"),
+                   p3 + theme(legend.position="none"),
+                   align = 'vh',
+                   labels = c("", "", ""),
+                   hjust = -1,
+                   nrow = 3
+)
+
+# extract the legend from one of the plots
+# (clearly the whole thing only makes sense if all plots
+# have the same legend, so we can arbitrarily pick one.)
+legend <- get_legend(p1)
+
+# add the legend to the row we made earlier. Give it one-third of the width
+# of one plot (via rel_widths).
+p <- plot_grid( prow, legend, rel_widths = c(3, .3))
+p
