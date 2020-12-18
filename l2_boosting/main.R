@@ -6,6 +6,11 @@ Y = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l
 X = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/data/predictors.csv",
                                encoding = "UTF-8")[,-c(1,2)]
 
+Y_lag = tail(Y,-12)
+Y_or_lag = tail(Y_or,-12)
+
+
+
 library(forecast)
 library(mboost)
 
@@ -14,19 +19,22 @@ source("l2_boosting/functions.R")
 # Example with v=0.1, h=1, M_max = 2500 and ratio_start = 80%
 
 v_in = 0.1
-h_in = 3
-Mstop_in = 2500
-ratio_start_lag = 0.8
+h_in = 1
+Mstop_in = 50
+ratio_start_lag = 0.79
 
-b = prediciton_boost_2(Y_or_lag,
-                       Y_lag,
-                       X,
-                       v = v_in,
-                       h = h_in,
-                       ratio_start = ratio_start_lag,
+b_aic = boosting_reg_aic(Y_or = Y_or_lag,Y = Y_lag, X, v = v_in, h = h_in, ratio_start = ratio_start_lag,
                        Mstop = Mstop_in)
 
-b_2 = SARIMA_bench(Y_or, Y, h=3, ratio_start = 0.8)
+b_kfold = boosting_reg_kfold(Y_or_lag, Y_lag, X, v = v_in, h = h_in, ratio_start = ratio_start_lag,
+                           Mstop = 100)
+
+b_quantile = boosting_reg_quantile(Y_or_lag, Y_lag, X, v = v_in, h = h_in, ratio_start = ratio_start_lag,
+                           Mstop = 100, tau_in = 0.5)
+
+ratio_start_in = 0.8
+
+b_sarima = SARIMA_bench(Y_or, Y, h=1, ratio_start = ratio_start_in)
 
 n_tot_lag <- length(Y_lag)
 n_out_lag <- ceiling(n_tot_lag - ratio_start_lag*n_tot_lag)
@@ -38,11 +46,15 @@ ind_out <- seq(to = n_tot, by = 1, length = n_out)
 
 # RESULTS FOR BOOSTING
 
-evaluation(b$forecast_uni, Y_or_lag, ind_out_lag, "boost")
+b_aic_e = evaluation(b_aic$forecast, Y_or_lag, ind_out_lag, "boost_aic")
+
+b_kfold_e = evaluation(b_kfold$forecast, Y_or_lag, ind_out_lag, "boost_kfold")
+
+b_quantile_e = evaluation(b_quantile$forecast, Y_or_lag, ind_out_lag, "boost_quantile")
 
 # RESULTS FOR BENCH
 
-evaluation(b_2$benchmark, Y_or, ind_out, "SARIMA")
+b_2_e = evaluation(b_2$benchmark, Y_or, ind_out, "SARIMA")
 
 # Variable Importance
 ## Varimp
@@ -54,9 +66,27 @@ names(var_imp) = c("Intercept", colnames(X))
 df = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
                 name = names(var_imp[order(var_imp, decreasing = T)]))
 
+## Varimp
+
+var_imp = rowSums(b$varimp)/ncol(b$varimp)
+
+names(var_imp) = c("Intercept", colnames(X))
+
+df = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
+                name = names(var_imp[order(var_imp, decreasing = T)]))
+
+## Varimp quantile
+
+var_imp = rowSums(b_quantile$varimp)/ncol(b_quantile$varimp)
+
+names(var_imp) = c("Intercept", colnames(X))
+
+df = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
+                name = names(var_imp[order(var_imp, decreasing = T)]))
+
 ## Frequency
 
-n_prev = length(b$selected)
+n_prev = length(b_quantile$selected)
 freq_search = function(x) {
   y=0
   for (i in 1:n_prev) {
