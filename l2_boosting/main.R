@@ -1,8 +1,10 @@
 
 library(forecast)
 library(mboost)
+library(quantreg)
+library(scoringRules)
 
-source("l2_boosting/functions.R")
+source("functions.R")
 
 Y_or = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/data/target.csv",
                                encoding = "UTF-8")[,4]
@@ -11,12 +13,12 @@ Y = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l
 X = read.csv("https://raw.githubusercontent.com/pedroskorin/L2_Boosting/master/l2_boosting/data/predictors.csv",
                                encoding = "UTF-8")[,-c(1,2)]
 
-X_lag = add_lags(X, Y)
+X_lag = add_lags(X,Y)
 
-Y_lag = tail(Y,-12)
-Y_or_lag = tail(Y_or,-12)
+Y_lag = tail(Y,-11)
+Y_or_lag = tail(Y_or,-11)
 names = colnames(X_lag)
-colnames(X_lag) = 1:(823*13)
+colnames(X_lag) = 1:(823*12)
 
 # Example with v=0.1, h=1, M_max = 2500 and ratio_start = 80%
 
@@ -25,18 +27,56 @@ h_in = 1
 Mstop_in = 50
 ratio_start_lag = 0.79
 
-b_aic = boosting_reg_aic(Y_or = Y_or_lag,Y = Y_lag, X_lag, v = v_in, h = h_in, ratio_start = ratio_start_lag,
+b_aic_1 = boosting_reg_aic(Y_or = Y_or_lag,Y = Y_lag, X_lag, v = v_in, h = 1, ratio_start = ratio_start_lag,
                        Mstop = Mstop_in)
+b_aic_2 = boosting_reg_aic(Y_or = Y_or_lag,Y = Y_lag, X_lag, v = v_in, h = 2, ratio_start = ratio_start_lag,
+                         Mstop = Mstop_in)
+b_aic_3 = boosting_reg_aic(Y_or = Y_or_lag,Y = Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                         Mstop = Mstop_in)
 
-b_kfold = boosting_reg_kfold(Y_or_lag, Y_lag, X_lag, v = v_in, h = h_in, ratio_start = ratio_start_lag,
-                           Mstop = 100)
+b_kfold_50_1 = boosting_reg_kfold(Y_or_lag, Y_lag, X_lag, v = v_in, h = 1, ratio_start = ratio_start_lag,
+                           Mstop = Mstop_in)
+b_kfold_50_2 = boosting_reg_kfold(Y_or_lag, Y_lag, X_lag, v = v_in, h = 2, ratio_start = ratio_start_lag,
+                             Mstop = Mstop_in)
+b_kfold_50_3 = boosting_reg_kfold(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                             Mstop = Mstop_in)
 
-b_quantile = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = h_in, ratio_start = ratio_start_lag,
-                           Mstop = 100, tau_in = 0.5)
+b_quantile_5_1 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 1, ratio_start = ratio_start_lag,
+                           Mstop = 50, tau_in = 0.5)
+b_quantile_5_2 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 2, ratio_start = ratio_start_lag,
+                           Mstop = 50, tau_in = 0.5)
+b_quantile_5_3 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                           Mstop = 50, tau_in = 0.5)
+b_quantile_95_3 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                           Mstop = 50, tau_in = 0.95)
+b_quantile_95_3 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                          Mstop = 50, tau_in = 0.95)
+b_quantile_95_3 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                          Mstop = 50, tau_in = 0.95)
+b_quantile_05_3 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                          Mstop = 50, tau_in = 0.05)
+b_quantile_05_3 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                          Mstop = 50, tau_in = 0.05)
+b_quantile_05_3 = boosting_reg_quantile(Y_or_lag, Y_lag, X_lag, v = v_in, h = 3, ratio_start = ratio_start_lag,
+                          Mstop = 50, tau_in = 0.05)
 
 ratio_start_in = 0.8
 
-b_sarima = SARIMA_bench(Y_or, Y, h=1, ratio_start = ratio_start_in)
+b_sarima_1 = SARIMA_bench(Y_or, Y, h=1, ratio_start = ratio_start_in)
+b_sarima_2 = SARIMA_bench(Y_or, Y, h=2, ratio_start = ratio_start_in)
+b_sarima_3 = SARIMA_bench(Y_or, Y, h=3, ratio_start = ratio_start_in)
+
+b_qsarima_5_1 = quantile_sarima(Y_or, Y, h=1, ratio_start = 0.79, tau_in = 0.5)
+b_qsarima_5_2 = quantile_sarima(Y_or, Y, h=2, ratio_start = 0.79, tau_in = 0.5)
+b_qsarima_5_3 = quantile_sarima(Y_or, Y, h=3, ratio_start = 0.79, tau_in = 0.5)
+
+b_qsarima_95_1 = quantile_sarima(Y_or, Y, h=1, ratio_start = 0.79, tau_in = 0.95)
+b_qsarima_95_2 = quantile_sarima(Y_or, Y, h=2, ratio_start = 0.79, tau_in = 0.95)
+b_qsarima_95_3 = quantile_sarima(Y_or, Y, h=3, ratio_start = 0.79, tau_in = 0.95)
+
+b_qsarima_05_1 = quantile_sarima(Y_or, Y, h=1, ratio_start = 0.79, tau_in = 0.05)
+b_qsarima_05_2 = quantile_sarima(Y_or, Y, h=2, ratio_start = 0.79, tau_in = 0.05)
+b_qsarima_05_3 = quantile_sarima(Y_or, Y, h=3, ratio_start = 0.79, tau_in = 0.05)
 
 n_tot_lag <- length(Y_lag)
 n_out_lag <- ceiling(n_tot_lag - ratio_start_lag*n_tot_lag)
@@ -46,61 +86,56 @@ n_tot <- length(Y)
 n_out <- ceiling(n_tot - ratio_start_in*n_tot)
 ind_out <- seq(to = n_tot, by = 1, length = n_out)
 
-# RESULTS FOR BOOSTING
+# PERFORMANCE MEASURES
+b_aic_e_1 = evaluation(b_aic_1$forecast, Y_or_lag, ind_out_lag, "boost_aic h=1")
+b_aic_e_2 = evaluation(b_aic_2$forecast, Y_or_lag, ind_out_lag, "boost_aic h=2")
+b_aic_e_3 = evaluation(b_aic_3$forecast, Y_or_lag, ind_out_lag, "boost_aic h=3")
 
-b_aic_e = evaluation(b_aic$forecast, Y_or_lag, ind_out_lag, "boost_aic h=1")
-
-b_kfold_e = evaluation(b_kfold$forecast, Y_or_lag, ind_out_lag, "boost_kfold h=1")
-
-b_quantile_e = evaluation(b_quantile$forecast, Y_or_lag, ind_out_lag, "boost_quantile h=1")
+b_kfold_e_1 = evaluation(b_kfold_50_1$forecast, Y_or_lag, ind_out_lag, "boost_kfold h=1")
+b_kfold_e_2 = evaluation(b_kfold_50_2$forecast, Y_or_lag, ind_out_lag, "boost_kfold h=2")
+b_kfold_e_3 = evaluation(b_kfold_50_3$forecast, Y_or_lag, ind_out_lag, "boost_kfold h=3")
 
 # RESULTS FOR BENCH
 
-b_sarima_e = evaluation(b_sarima$benchmark, Y_or, ind_out, "SARIMA h=1")
+b_sarima_e_1 = evaluation(b_sarima_1$benchmark, Y_or, ind_out, "SARIMA h=1")
+b_sarima_e_2 = evaluation(b_sarima_2$benchmark, Y_or, ind_out, "SARIMA h=2")
+b_sarima_e_3 = evaluation(b_sarima_3$benchmark, Y_or, ind_out, "SARIMA h=3")
+
+# dm test
+
+dm.test(exp(b_aic_1$forecast)[-1]-exp(tail(Y_or,38)),
+        exp(b_sarima_1$benchmark)[-1] - exp(tail(Y_or,38)),
+        h=1, power = 1, alternative = "less")
+
+dm.test(exp(b_aic_1$forecast)[-1]-exp(tail(Y_or,38)),
+        exp(b_kfold_50_1$forecast)[-1] - exp(tail(Y_or,38)),
+        h=1, power = 1, alternative = "greater")
 
 # Variable Importance
 ## Varimp
 
-var_imp = rowSums(b_aic$varimp)/ncol(b_aic$varimp)
+var_imp = rowSums(b_aic_1$varimp)/ncol(b_aic_1$varimp)
 
 names(var_imp) = c("Intercept", names)
 
-df = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
-                name = names(var_imp[order(var_imp, decreasing = T)]))
-
-## Varimp
-
-var_imp = rowSums(b$varimp)/ncol(b$varimp)
-
-names(var_imp) = c("Intercept", colnames(X))
-
-df = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
-                name = names(var_imp[order(var_imp, decreasing = T)]))
-
-## Varimp quantile
-
-var_imp = rowSums(b_quantile$varimp)/ncol(b_quantile$varimp)
-
-names(var_imp) = c("Intercept", colnames(X))
-
-df = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
+df_1 = data.frame(imp = var_imp[order(var_imp, decreasing = T)],
                 name = names(var_imp[order(var_imp, decreasing = T)]))
 
 ## Frequency
 
-n_prev = length(b_quantile$selected)
+n_prev = length(b_aic_3$selected)
 freq_search = function(x) {
   y=0
   for (i in 1:n_prev) {
-    y = y + (x %in% b$selected[[i]])
+    y = y + (x %in% b_aic_2$selected[[i]])
   }
   return(y/n_prev)
 }
 
-vector_freq = mapply(freq_search, 1:(ncol(X)+1))
-df_freq = data.frame(freq = vector_freq[order(vector_freq, decreasing = T)],
-                     index = (1:ncol(X))[order(vector_freq, decreasing = T)])
-View(df_freq)
+vector_freq = mapply(freq_search, 1:(ncol(X_lag)+1))
+df_freq_2 = data.frame(freq = vector_freq[order(vector_freq, decreasing = T)],
+                     index = c("Intercept", names)[order(vector_freq, decreasing = T)])
+View(df_freq_2)
 
 # Plotting graph
 
@@ -108,6 +143,31 @@ library(ggplot2)
 library(reshape2)
 
 # Plot
+# h=1
+
+date = seq(as.Date("2003/1/1"), as.Date("2017/10/1"), "months")
+
+intervalo = 48
+
+Boosting = exp(tail(Y_or, 48))
+SARIMA = exp(tail(Y_or, 48))
+Original = exp(tail(Y_or, 48))
+date = tail(date, 48)
+
+n = length(tail(exp(b_aic_1$forecast),-1))
+
+Boosting[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b_aic_1$forecast),-1)
+SARIMA[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b_sarima_1$benchmark),-1)
+
+df = data.frame(date = date, SARIMA = SARIMA, 
+                Boosting  = Boosting, Original = Original)
+
+meltdf = melt(df, id = "date")
+colnames(meltdf)[2] = "Model"
+
+meltdf_1 = meltdf
+
+# h=2
 
 date = seq(as.Date("2003/2/1"), as.Date("2017/10/1"), "months")
 
@@ -118,16 +178,42 @@ SARIMA = exp(tail(Y_or, 48))
 Original = exp(tail(Y_or, 48))
 date = tail(date, 48)
 
-n = length(tail(exp(b$forecast_uni),-1))
+n = length(tail(exp(b_aic_2$forecast),-1))
 
-Boosting[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b$forecast_uni),-1)
-SARIMA[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b_2$benchmark),-1)
+Boosting[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b_aic_2$forecast),-1)
+SARIMA[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b_sarima_2$benchmark),-1)
 
 df = data.frame(date = date, SARIMA = SARIMA, 
                 Boosting  = Boosting, Original = Original)
 
 meltdf = melt(df, id = "date")
 colnames(meltdf)[2] = "Model"
+
+meltdf_2 = meltdf
+
+# h=3
+
+date = seq(as.Date("2003/2/1"), as.Date("2017/10/1"), "months")
+
+intervalo = 48
+
+Boosting = exp(tail(Y_or, 48))
+SARIMA = exp(tail(Y_or, 48))
+Original = exp(tail(Y_or, 48))
+date = tail(date, 48)
+
+n = length(tail(exp(b_aic_3$forecast),-1))
+
+Boosting[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b_aic_3$forecast),-1)
+SARIMA[c(rep(F,length(date)-n),rep(T,n))] = tail(exp(b_sarima_3$benchmark),-1)
+
+df = data.frame(date = date, SARIMA = SARIMA, 
+                Boosting  = Boosting, Original = Original)
+
+meltdf = melt(df, id = "date")
+colnames(meltdf)[2] = "Model"
+
+meltdf_3 = meltdf
 
 meltdf_1$date = seq(as.Date("2013/11/1"), as.Date("2017/10/1"), "months")
 meltdf_2$date = seq(as.Date("2013/11/1"), as.Date("2017/10/1"), "months")
