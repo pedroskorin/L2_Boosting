@@ -7,12 +7,10 @@
 ## Grande do Sul                                                    ##
 ######################################################################
 
-rm(list=ls())
+rm(list=ls()) # clean environment
 require(mboost)
-require(R.matlab)
 require(forecast)
-require(sandwich)
-require(readxl)
+require(quantreg)
 source("l2_boosting/helper_functions.R")
 
 ##############
@@ -90,6 +88,8 @@ for (h_in in h_set) {
 ##############################
 ## 3.1 Performance measures ##
 ##############################
+
+# Index Configuration
 
 n_tot_lag <- length(Y_lag)
 n_out_lag <- ceiling(n_tot_lag - ratio_start_lag*n_tot_lag)
